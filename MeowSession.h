@@ -3,6 +3,7 @@
 
 #include "MeowModuleCollection.h"
 #include "MeowKeyboard.h"
+#include <jack/jack.h>
 
 typedef struct MeowSession_s MeowSession;
 struct MeowSession_s {
@@ -14,5 +15,8 @@ struct MeowSession_s {
 MeowSession* MeowSession_create(void);
 void MeowSession_start(MeowSession *s);
 void MeowSession_free(MeowSession *s);
+void MeowSession_generate(void *session, jack_default_audio_sample_t *out,
+			  jack_nframes_t nframes, int sampleRate,
+			  int *sampleCounter);
 
 #endif

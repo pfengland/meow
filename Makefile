@@ -1,7 +1,7 @@
 TARGET=meow
-OBJECTS=meow.o MeowApp.o MeowWindow.o MeowConsole.o MeowSession.o MeowModule.o MeowModuleCollection.o DynamicArray.o MeowSynthModule.o MeowMidiModule.o MeowKeyboard.o
+OBJECTS=meow.o MeowApp.o MeowWindow.o MeowConsole.o MeowSession.o MeowModule.o MeowModuleCollection.o DynamicArray.o MeowSynthModule.o MeowMidiModule.o MeowKeyboard.o MeowAudioModule.o
 CFLAGS=-Wall -g --std=gnu99
-LDLIBS=-ljack -lSDL -lX11 -lpthread -lreadline -lasound
+LDLIBS=-ljack -lSDL -lX11 -lpthread -lreadline -lasound -ljack
 CC=gcc
 
 $(TARGET) : $(OBJECTS)
