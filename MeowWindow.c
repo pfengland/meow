@@ -6,7 +6,7 @@ MeowWindow* MeowWindow_create(MeowSession *s) {
 
      MeowWindow *window = malloc(sizeof(*window));
 
-     window->update = 0;
+     window->update = 1;
      window->session = s;
 
      XInitThreads();
@@ -18,16 +18,16 @@ MeowWindow* MeowWindow_create(MeowSession *s) {
      window->screen = SDL_SetVideoMode(640, 480, 32, opts);
 
      SDL_WM_SetCaption("MEOW", NULL);
-     SDL_FillRect(window->screen, NULL,
-		  SDL_MapRGB(window->screen->format, 0,100,100));
-     SDL_Flip(window->screen);
 
+     window->keyboard = KeyboardView_create(window->session);
+     
      return window;
 }
 
-void MeowWindow_free(MeowWindow *app) {
+void MeowWindow_free(MeowWindow *w) {
      SDL_Quit();
-     free(app);
+     KeyboardView_free(w->keyboard);
+     free(w);
 }
 
 void MeowWindow_mainLoop(MeowWindow *w) {
@@ -39,15 +39,22 @@ void MeowWindow_mainLoop(MeowWindow *w) {
      MeowWindow_update(w);
 }
 
-void MeowWindow_update(MeowWindow *w) {
+void MeowWindow_update(MeowWindow *window) {
 
      // drawing
-     if (w->update) {
+     if (window->update) {
 
-	  w->update = 0;
+	  window->update = 0;
+
+	  SDL_FillRect(window->screen, NULL,
+		       SDL_MapRGB(window->screen->format, 0,100,100));
+
+	  KeyboardView_draw(window->keyboard, window->screen, 0, 0);
+
+	  SDL_Flip(window->screen);
 
 	  // limit framerate
-	  int elapsed = SDL_GetTicks() - w->frameStartTime;
+	  int elapsed = SDL_GetTicks() - window->frameStartTime;
 	  int frametime = 1000 / MeowWindow_frameRate;
 	  if (elapsed < frametime) {
 	       int pause = frametime - elapsed;

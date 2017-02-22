@@ -3,6 +3,7 @@
 
 #include <SDL/SDL.h>
 #include "MeowSession.h"
+#include "KeyboardView.h"
 
 static const int MeowWindow_frameRate = 30;
 
@@ -12,6 +13,7 @@ struct MeowWindow_s {
      int update;
      MeowSession *session;
      int frameStartTime;
+     KeyboardView *keyboard;
 };
 
 MeowWindow* MeowWindow_create(MeowSession *s);
