@@ -50,5 +50,6 @@ void MeowSession_generate(void *session, jack_default_audio_sample_t *out,
 			  int *sampleCounter) {
 
      MeowSession *s = session;
-     MeowMixerModule_generate(s->mixer, out, nframes, sampleRate, sampleCounter);
+     MeowMixerModule_generate(s->mixer, out, nframes, sampleRate,
+			      sampleCounter);
 }

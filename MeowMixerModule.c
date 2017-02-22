@@ -37,7 +37,6 @@ void MeowMixerModule_generate(MeowMixerModule *mixer, jack_default_audio_sample_
 			      int *sampleCounter) {
 
      // test tone
-     
      double amp = 0.1;
      int i;
 
@@ -48,6 +47,10 @@ void MeowMixerModule_generate(MeowMixerModule *mixer, jack_default_audio_sample_
      int halfCycle = samplesPerCycle / 2;
 
      for (i=0; i<nframes; i++) {
+
+	  // silence for now
+	  out[i] = 0;
+	  continue;
 
 	  int cycleSample = *sampleCounter % samplesPerCycle;
 
