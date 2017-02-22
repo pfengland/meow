@@ -24,6 +24,10 @@ MeowSession* MeowSession_create(void) {
      m = MeowMidiModule_create(s->keys);
      MeowModuleCollection_add(s->modules, m);
 
+     m = MeowMixerModule_create();
+     MeowModuleCollection_add(s->modules, m);
+     s->mixer = m->impl;
+
      // for now - create a single synth instance on startup
      m = MeowSynthModule_create();
      MeowModuleCollection_add(s->modules, m);
@@ -45,33 +49,6 @@ void MeowSession_generate(void *session, jack_default_audio_sample_t *out,
 			  jack_nframes_t nframes, int sampleRate,
 			  int *sampleCounter) {
 
-     //     MeowSession *s = session;
-     
-     double amp = 0.5;
-     double samplesPerMS = sampleRate / 1000;
-     int i;
-
-     /* here is where we generate the audio. We ask the mixer to generate
-	the audio which follows the signal chain upwards. */
-     int freq = 100;
-     int samplesPerCycle = (double)sampleRate/freq;
-     int speed = 100;
-     int samplesPerStep = samplesPerMS * speed;
-     int halfCycle = samplesPerCycle / 2;
-
-     for (i=0; i<nframes; i++) {
-
-	  int cycleSample = *sampleCounter % samplesPerCycle;
-
-	  double decay = 1.0 - ((double)*sampleCounter /
-				(double)samplesPerStep);
-
-	  // square wave
-	  if (cycleSample < halfCycle) {
-	       out[i] = -1*amp*decay;
-	  } else {
-	       out[i] = amp*decay;
-	  }
-	  (*sampleCounter)++;
-     }
+     MeowSession *s = session;
+     MeowMixerModule_generate(s->mixer, out, nframes, sampleRate, sampleCounter);
 }

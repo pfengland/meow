@@ -3,6 +3,7 @@
 
 #include "MeowModuleCollection.h"
 #include "MeowKeyboard.h"
+#include "MeowMixerModule.h"
 #include <jack/jack.h>
 
 typedef struct MeowSession_s MeowSession;
@@ -10,6 +11,7 @@ struct MeowSession_s {
      int quit;
      MeowModuleCollection *modules;
      MeowKeyboard *keys;
+     MeowMixerModule *mixer;
 };
 
 MeowSession* MeowSession_create(void);
