@@ -21,6 +21,8 @@ KeyboardView* KeyboardView_create(MeowSession *s) {
      k->mouseRepeatTime = 0;
      k->mouseDownX = 0;
      k->mouseDownY = 0;
+     k->update = 0;
+     k->maxFirstKey = 127;
      return k;
 }
 
@@ -88,6 +90,7 @@ void KeyboardView_draw(KeyboardView *k, SDL_Surface *screen, int x, int y) {
      int keyOffset = 0;
      if (k->firstKey > MeowKeyboard_noteCount - 1 - screenKeys) {
 	  k->firstKey = MeowKeyboard_noteCount - 1 - screenKeys;
+	  k->maxFirstKey = k->firstKey;
 	  keyOffset = k->w % k->keySize - k->keySize;
      }
      
@@ -155,10 +158,26 @@ void KeyboardView_draw(KeyboardView *k, SDL_Surface *screen, int x, int y) {
      TTF_CloseFont(font);
 }
 
-int KeyboardView_mouseButtonRepeat(KeyboardView *k) {
-     SDL_MouseButtonEvent event = {type: SDL_MOUSEBUTTONDOWN, button: SDL_BUTTON_LEFT,
-				   state: SDL_PRESSED, x: k->mouseDownX, y: k->mouseDownY};
-     return KeyboardView_mouseButtonEvent(k, &event);
+Uint32 KeyboardView_timeout(Uint32 interval, void *keyboard) {
+     printf("timeout called\n");
+     KeyboardView *k = keyboard;
+     //     SDL_Event event = {type: SDL_MOUSEBUTTONDOWN, button: k->lastButton};
+     //          SDL_PushEvent(&event);
+	       // down scroll button pressed
+     if (k->scrollDownPressed) {
+	  k->firstKey--;
+	  if (k->firstKey < 0 ) k->firstKey = 0;
+	  k->update = 1;
+     } else if (k->scrollUpPressed) {
+	  if (k->firstKey < k->maxFirstKey) {
+	       k->firstKey++;
+	       if (k->firstKey >= MeowKeyboard_noteCount)
+		    k->firstKey = MeowKeyboard_noteCount - 1;
+	  }
+	  k->update = 1;
+     }
+     
+     return 100;
 }
 
 int KeyboardView_mouseButtonEvent(KeyboardView *k, SDL_MouseButtonEvent *event) {
@@ -168,21 +187,47 @@ int KeyboardView_mouseButtonEvent(KeyboardView *k, SDL_MouseButtonEvent *event) 
 	       k->firstKey--;
 	       if (k->firstKey < 0 ) k->firstKey = 0;
 	       k->scrollDownPressed = 1;
+
+	       k->lastButton.type = event->type;
+	       k->lastButton.button = event->button;
+	       k->lastButton.state = event->state;
+	       k->lastButton.x = event->x;
+	       k->lastButton.y = event->y;
+	       printf("adding timer\n");
+	       k->repeatTimer = SDL_AddTimer(300,
+					     KeyboardView_timeout,
+					     k);
+	       
 	       return 1;
 	  } else if (event->x >= k->x + k->w - k->keySize) {
 	       // up scroll button pressed
-	       k->firstKey++;
-	       if (k->firstKey >= MeowKeyboard_noteCount)
-		    k->firstKey = MeowKeyboard_noteCount - 1;
+	       if (k->firstKey < k->maxFirstKey) {
+		    k->firstKey++;
+		    if (k->firstKey >= MeowKeyboard_noteCount)
+			 k->firstKey = MeowKeyboard_noteCount - 1;
+	       }
 	       k->scrollUpPressed = 1;
+	       k->lastButton.type = event->type;
+	       k->lastButton.button = event->button;
+	       k->lastButton.state = event->state;
+	       k->lastButton.x = event->x;
+	       k->lastButton.y = event->y;
+	       printf("adding timer\n");	       
+	       k->repeatTimer = SDL_AddTimer(300,
+					     KeyboardView_timeout,
+					     k);
 	       return 1;
 	  }
      } else {
 	  if (k->scrollDownPressed) {
 	       k->scrollDownPressed = 0;
+	       printf("removing timer\n");
+	       SDL_RemoveTimer(k->repeatTimer);
 	       return 1;
 	  } else if (k->scrollUpPressed) {
 	       k->scrollUpPressed = 0;
+	       printf("removing timer\n");
+	       SDL_RemoveTimer(k->repeatTimer);
 	       return 1;
 	  }
      }

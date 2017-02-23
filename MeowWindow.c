@@ -11,7 +11,7 @@ MeowWindow* MeowWindow_create(MeowSession *s) {
      window->session = s;
 
      XInitThreads();
-     SDL_Init(SDL_INIT_VIDEO);
+     SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER);
      if (TTF_Init() == -1) {
 	  printf("TTF_Init: %s\n", TTF_GetError());
 	  exit(1);
@@ -42,33 +42,13 @@ void MeowWindow_mainLoop(MeowWindow *w) {
      w->frameStartTime = SDL_GetTicks();
 
      MeowWindow_handleEvents(w);
-     MeowWindow_repeatEvents(w);
      MeowWindow_update(w);
-}
-
-void MeowWindow_repeatEvents(MeowWindow *w) {
-     int repeatDelay = 300;
-     int repeatInterval = 100;
-     int time = SDL_GetTicks();
-     // mouse has been held past the repeat delay
-     // and no repeat events have been sent
-     if (time - w->keyboard->mouseDownTime >= repeatDelay &&
-	 !w->keyboard->mouseRepeatTime) {
-	  if (KeyboardView_mouseButtonRepeat(w->keyboard)) {
-	       w->update = 1;
-	  }
-     } else if (time - w->keyboard->mouseRepeatTime >= repeatInterval &&
-		w->keyboard->mouseRepeatTime) {
-	  if (KeyboardView_mouseButtonRepeat(w->keyboard)) {
-	       w->update = 1;
-	  }
-     }
 }
 
 void MeowWindow_update(MeowWindow *window) {
 
      // drawing
-     if (window->update) {
+     if (window->update || window->keyboard->update) {
 
 	  window->update = 0;
 
@@ -119,17 +99,6 @@ void MeowWindow_handleEvents(MeowWindow *w) {
 
 		    if (KeyboardView_mouseButtonEvent(w->keyboard, &event.button)) {
 			 w->update = 1;
-		    }
-
-		    // reset repeat timer
-		    w->keyboard->mouseRepeatTime = 0;
-
-		    // record the time when the mouse button was pressed so we can send repeat events
-		    // after a certain delay
-		    if (event.type == SDL_MOUSEBUTTONDOWN) {
-			 w->keyboard->mouseDownTime = SDL_GetTicks();
-			 w->keyboard->mouseDownX = event.button.x;
-			 w->keyboard->mouseDownY = event.button.y;
 		    }
 	       }
 	  }
