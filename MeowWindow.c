@@ -42,7 +42,27 @@ void MeowWindow_mainLoop(MeowWindow *w) {
      w->frameStartTime = SDL_GetTicks();
 
      MeowWindow_handleEvents(w);
+     MeowWindow_repeatEvents(w);
      MeowWindow_update(w);
+}
+
+void MeowWindow_repeatEvents(MeowWindow *w) {
+     int repeatDelay = 300;
+     int repeatInterval = 100;
+     int time = SDL_GetTicks();
+     // mouse has been held past the repeat delay
+     // and no repeat events have been sent
+     if (time - w->keyboard->mouseDownTime >= repeatDelay &&
+	 !w->keyboard->mouseRepeatTime) {
+	  if (KeyboardView_mouseButtonRepeat(w->keyboard)) {
+	       w->update = 1;
+	  }
+     } else if (time - w->keyboard->mouseRepeatTime >= repeatInterval &&
+		w->keyboard->mouseRepeatTime) {
+	  if (KeyboardView_mouseButtonRepeat(w->keyboard)) {
+	       w->update = 1;
+	  }
+     }
 }
 
 void MeowWindow_update(MeowWindow *window) {
@@ -87,7 +107,7 @@ void MeowWindow_handleEvents(MeowWindow *w) {
 	       int opts = SDL_SWSURFACE|SDL_RESIZABLE;
 	       w->screen = SDL_SetVideoMode(event.resize.w, event.resize.h, 32, opts);
 	       w->update = 1;
-	  } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+	  } else if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
 	       // need to pass the event to the child view
 	       // child views can have a base class defining their rectangle
 	       // to easily check who needs to get the mouse event etc
@@ -96,8 +116,20 @@ void MeowWindow_handleEvents(MeowWindow *w) {
 		   event.button.y >= w->keyboard->y &&
 		   event.button.y <= w->keyboard->y + w->keyboard->h) {
 		    printf("keyboard clicked\n");
+
 		    if (KeyboardView_mouseButtonEvent(w->keyboard, &event.button)) {
 			 w->update = 1;
+		    }
+
+		    // reset repeat timer
+		    w->keyboard->mouseRepeatTime = 0;
+
+		    // record the time when the mouse button was pressed so we can send repeat events
+		    // after a certain delay
+		    if (event.type == SDL_MOUSEBUTTONDOWN) {
+			 w->keyboard->mouseDownTime = SDL_GetTicks();
+			 w->keyboard->mouseDownX = event.button.x;
+			 w->keyboard->mouseDownY = event.button.y;
 		    }
 	       }
 	  }

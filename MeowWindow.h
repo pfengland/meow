@@ -20,6 +20,7 @@ MeowWindow* MeowWindow_create(MeowSession *s);
 void MeowWindow_free(MeowWindow *w);
 void MeowWindow_mainLoop(MeowWindow *w);
 void MeowWindow_handleEvents(MeowWindow *w);
+void MeowWindow_repeatEvents(MeowWindow *w);
 void MeowWindow_update(MeowWindow *w);
 
 #endif
