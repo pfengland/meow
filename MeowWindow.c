@@ -1,6 +1,7 @@
 #include "MeowWindow.h"
 #include <stdlib.h>
 #include <X11/Xlib.h>
+#include <SDL/SDL_ttf.h>
 
 MeowWindow* MeowWindow_create(MeowSession *s) {
 
@@ -11,10 +12,14 @@ MeowWindow* MeowWindow_create(MeowSession *s) {
 
      XInitThreads();
      SDL_Init(SDL_INIT_VIDEO);
+     if (TTF_Init() == -1) {
+	  printf("TTF_Init: %s\n", TTF_GetError());
+	  exit(1);
+     }
 
      // get the screen
      //    int opts = SDL_SWSURFACE|SDL_NOFRAME;
-     int opts = SDL_SWSURFACE;
+     int opts = SDL_SWSURFACE|SDL_RESIZABLE;
      window->screen = SDL_SetVideoMode(640, 480, 32, opts);
 
      SDL_WM_SetCaption("MEOW", NULL);
@@ -25,6 +30,7 @@ MeowWindow* MeowWindow_create(MeowSession *s) {
 }
 
 void MeowWindow_free(MeowWindow *w) {
+     TTF_Quit();
      SDL_Quit();
      KeyboardView_free(w->keyboard);
      free(w);
@@ -77,7 +83,10 @@ void MeowWindow_handleEvents(MeowWindow *w) {
 
 	  } else if (event.type == SDL_QUIT) {
 	       w->session->quit = 1;
+	  } else if (event.type == SDL_VIDEORESIZE) {
+	       int opts = SDL_SWSURFACE|SDL_RESIZABLE;
+	       w->screen = SDL_SetVideoMode(event.resize.w, event.resize.h, 32, opts);
+	       w->update = 1;
 	  }
      }
-
 }

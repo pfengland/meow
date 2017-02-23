@@ -10,7 +10,6 @@ struct MeowApp_s {
      MeowWindow *window;
      MeowConsole *console;
      MeowSession *session;
-     int update;
 };
 
 MeowApp* MeowApp_create(void);
