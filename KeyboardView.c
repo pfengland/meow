@@ -9,7 +9,12 @@ const int KeyboardView_pattern[KeyboardView_notesPerOctave] =
 KeyboardView* KeyboardView_create(MeowSession *s) {
      KeyboardView *k = malloc(sizeof(*k));
      k->session = s;
-
+     k->x = 0;
+     k->y = 0;
+     k->w = 0;
+     k->h = 0;
+     k->firstKey = 0;
+     k->keySize = 25;
      return k;
 }
 
@@ -29,7 +34,7 @@ void KeyboardView_draw(KeyboardView *k, SDL_Surface *screen, int x, int y) {
      // draw the keyboard
 
      // define pixel size of key squares
-     int keySize = 25;
+
      // keep track of the x coordinate as we draw squares
      int keyX = x;
      // pixel padding for squares and numbers
@@ -42,7 +47,7 @@ void KeyboardView_draw(KeyboardView *k, SDL_Surface *screen, int x, int y) {
      // draw the initial scrollbar box
      // define the rect to draw it on
      SDL_Rect um = {x: x + padding, y: y + padding,
-		    w: keySize - padding * 2, h: keySize - padding * 2};
+		    w: k->keySize - padding * 2, h: k->keySize - padding * 2};
      SDL_FillRect(screen, &um, SDL_MapRGB(screen->format, 100, 100, 100));
 
      if(!(text_surface=TTF_RenderText_Solid(font,"<",color))) {
@@ -55,14 +60,14 @@ void KeyboardView_draw(KeyboardView *k, SDL_Surface *screen, int x, int y) {
 	  SDL_FreeSurface(text_surface);
      }
      
-     keyX += keySize;
+     keyX += k->keySize;
      
-     for (int i=0; i<MeowKeyboard_noteCount; i++) {
-	  if (keyX > screen->w - keySize) break;
+     for (int i=k->firstKey; i<MeowKeyboard_noteCount; i++) {
+	  if (keyX > screen->w - k->keySize) break;
 	  um.x = keyX;
 	  um.y = y + padding;
-	  um.w = keySize - padding * 2;
-	  um.h = keySize - padding * 2;
+	  um.w = k->keySize - padding * 2;
+	  um.h = k->keySize - padding * 2;
 	  if (KeyboardView_pattern[i%KeyboardView_notesPerOctave]) {
 	       SDL_FillRect(screen, &um, SDL_MapRGB(screen->format, 100,0,100));
 	  } else {
@@ -80,15 +85,15 @@ void KeyboardView_draw(KeyboardView *k, SDL_Surface *screen, int x, int y) {
 	       SDL_FreeSurface(text_surface);
 	  }
 	  
-	  keyX += keySize;
+	  keyX += k->keySize;
      }
 
      // draw the final scrollbar box
      // define the rect to draw it on
-     um.x = screen->w - keySize + padding;
+     um.x = screen->w - k->keySize + padding;
      um.y = y + padding;
-     um.w = keySize - padding * 2;
-     um.h = keySize - padding * 2;
+     um.w = k->keySize - padding * 2;
+     um.h = k->keySize - padding * 2;
      
      SDL_FillRect(screen, &um, SDL_MapRGB(screen->format, 100, 100, 100));
 
@@ -102,6 +107,26 @@ void KeyboardView_draw(KeyboardView *k, SDL_Surface *screen, int x, int y) {
 	  SDL_FreeSurface(text_surface);
      }
 
+     k->x = x;
+     k->y = y;
+     k->w = screen->w - x;
+     k->h = k->keySize;
 
      TTF_CloseFont(font);
+}
+
+int KeyboardView_mouseButtonEvent(KeyboardView *k, SDL_MouseButtonEvent *event) {
+     if (event->x <= k->x + k->keySize) {
+	  // down scroll button pressed
+	  k->firstKey--;
+	  if (k->firstKey < 0 ) k->firstKey = 0;
+	  return 1;
+     } else if (event->x >= k->x + k->w - k->keySize) {
+	  // up scroll button pressed
+	  k->firstKey++;
+	  if (k->firstKey >= MeowKeyboard_noteCount)
+	       k->firstKey = MeowKeyboard_noteCount - 1;
+	  return 1;
+     }
+     return 0;
 }

@@ -73,7 +73,7 @@ void MeowWindow_handleEvents(MeowWindow *w) {
 
      SDL_Event event;
 
-     if (SDL_PollEvent(&event)) {
+     while (SDL_PollEvent(&event)) {
 
 	  if (event.type == SDL_KEYDOWN) {
 
@@ -87,6 +87,19 @@ void MeowWindow_handleEvents(MeowWindow *w) {
 	       int opts = SDL_SWSURFACE|SDL_RESIZABLE;
 	       w->screen = SDL_SetVideoMode(event.resize.w, event.resize.h, 32, opts);
 	       w->update = 1;
+	  } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+	       // need to pass the event to the child view
+	       // child views can have a base class defining their rectangle
+	       // to easily check who needs to get the mouse event etc
+	       if (event.button.x >= w->keyboard->x &&
+		   event.button.x <= w->keyboard->x + w->keyboard->w &&
+		   event.button.y >= w->keyboard->y &&
+		   event.button.y <= w->keyboard->y + w->keyboard->h) {
+		    printf("keyboard clicked\n");
+		    if (KeyboardView_mouseButtonEvent(w->keyboard, &event.button)) {
+			 w->update = 1;
+		    }
+	       }
 	  }
      }
 }
